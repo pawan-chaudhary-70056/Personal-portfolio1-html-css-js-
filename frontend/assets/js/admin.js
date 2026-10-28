@@ -1,7 +1,16 @@
 "use strict";
 
 (() => {
-  const API_BASE = "http://localhost:4000/api";
+  // Talk to the API on the same hostname the page was opened with, so the
+  // session cookie stays first-party (a 127.0.0.1 page must call 127.0.0.1).
+  const PAGE_HOST = window.location.hostname || "localhost";
+  const API_BASE =
+    window.PORTFOLIO_API_BASE ||
+    `${window.location.protocol === "https:" ? "https" : "http"}://${PAGE_HOST}:4000/api`;
+  const FILE_PROTOCOL_HINT =
+    "This dashboard has to be served over HTTP. In a terminal, run " +
+    "python3 -m http.server 5500 inside the frontend folder (or use Live Server), " +
+    "then open http://localhost:5500/admin/login.html.";
   let csrfToken = "";
   let currentView = "overview";
   let projects = [];
@@ -31,20 +40,36 @@
       headers.set("Content-Type", "application/json");
     }
 
-    if (!["GET", "HEAD", "OPTIONS"].includes(method)) {
+    const mutating = !["GET", "HEAD", "OPTIONS"].includes(method);
+
+    if (mutating) {
       if (!csrfToken) await refreshCsrfToken();
       headers.set("X-CSRF-Token", csrfToken);
     }
 
-    const response = await fetch(`${API_BASE}${path}`, {
-      ...options,
-      method,
-      headers,
-      credentials: "include",
-      cache: "no-store"
-    });
+    const send = async () => {
+      const response = await fetch(`${API_BASE}${path}`, {
+        ...options,
+        method,
+        headers,
+        credentials: "include",
+        cache: "no-store"
+      });
 
-    const data = await response.json().catch(() => ({}));
+      const data = await response.json().catch(() => ({}));
+      return { response, data };
+    };
+
+    let { response, data } = await send();
+
+    // A rejected token is recoverable: the session may have been rotated, or
+    // replaced by another tab, so fetch a fresh token and repeat once.
+    if (mutating && response.status === 403 && data.code === "EBADCSRFTOKEN") {
+      csrfToken = "";
+      await refreshCsrfToken();
+      headers.set("X-CSRF-Token", csrfToken);
+      ({ response, data } = await send());
+    }
 
     if (!response.ok) {
       const error = new Error(
@@ -52,6 +77,7 @@
         data.error || `Request failed (${response.status}).`
       );
       error.status = response.status;
+      error.code = data.code;
       throw error;
     }
 
@@ -62,6 +88,26 @@
     const data = await api("/auth/csrf-token");
     if (!data.csrfToken) throw new Error("Could not initialize secure session.");
     csrfToken = data.csrfToken;
+  }
+
+  function describeApiFailure(error) {
+    if (error?.code === "EBADCSRFTOKEN") {
+      return (
+        "The browser did not keep the admin session cookie, so the security token was rejected. " +
+        "Allow cookies for this site, close other dashboard tabs and reload the page."
+      );
+    }
+
+    if (typeof error?.status === "number" && error.status >= 400) {
+      return error.status === 401
+        ? error.message
+        : `The API responded with ${error.status}: ${error.message}`;
+    }
+
+    return (
+      `Could not reach the API at ${API_BASE} from ${window.location.origin}. ` +
+      "Start the backend with \"npm run dev\" in the backend folder, then reload this page."
+    );
   }
 
   function notify(message, type = "error") {
@@ -1778,6 +1824,14 @@ if (!["overview", "profile", "projects", "experience", "education", "certificati
 
     $("#admin-year").textContent = String(new Date().getFullYear());
 
+    // Opened by double-clicking the file: the API is unreachable from a file
+    // origin, so explain how to serve the dashboard instead of failing with a
+    // confusing CORS error.
+    if (window.location.protocol === "file:") {
+      notifyLogin(FILE_PROTOCOL_HINT);
+      return;
+    }
+
     try {
       await refreshCsrfToken();
       const session = await api("/auth/me");
@@ -1787,7 +1841,7 @@ if (!["overview", "profile", "projects", "experience", "education", "certificati
       }
     } catch (error) {
       if (error.status !== 401) {
-        notifyLogin("Could not connect to the API. Check that the backend is running.");
+        notifyLogin(describeApiFailure(error));
       }
     }
 
@@ -1812,7 +1866,7 @@ if (!["overview", "profile", "projects", "experience", "education", "certificati
         if (!session.admin) throw new Error("Session verification failed.");
         location.replace("./index.html");
       } catch (error) {
-        notifyLogin(error.message || "Unable to sign in.");
+        notifyLogin(describeApiFailure(error));
       } finally {
         button.disabled = false;
         button.querySelector("span").textContent = "Sign in securely";
@@ -1833,6 +1887,13 @@ if (!["overview", "profile", "projects", "experience", "education", "certificati
 
     $("#admin-year").textContent = String(new Date().getFullYear());
 
+    if (window.location.protocol === "file:") {
+      const nameElement = $("#admin-name");
+      if (nameElement) nameElement.textContent = "Not signed in";
+      notify(FILE_PROTOCOL_HINT);
+      return;
+    }
+
     try {
       await refreshCsrfToken();
       const result = await api("/admin/check");
@@ -1845,7 +1906,7 @@ if (!["overview", "profile", "projects", "experience", "education", "certificati
         location.replace("./login.html");
         return;
       }
-      notify(error.message || "Could not verify administrator session.");
+      notify(describeApiFailure(error));
       return;
     }
 

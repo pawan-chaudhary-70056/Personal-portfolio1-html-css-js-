@@ -3,6 +3,13 @@
 
 document.addEventListener("DOMContentLoaded", () => {
 
+  // Call the API on the same hostname the page was opened with, so localhost
+  // and 127.0.0.1 both work without CORS or cookie surprises.
+  const PAGE_HOST = window.location.hostname || "localhost";
+  const API_BASE =
+    window.PORTFOLIO_API_BASE ||
+    `${window.location.protocol === "https:" ? "https" : "http"}://${PAGE_HOST}:4000/api`;
+
   /* Published experience — public API */
 
   async function loadPublishedExperience() {
@@ -11,7 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     try {
       const response = await fetch(
-        "http://localhost:4000/api/public/experience",
+        `${API_BASE}/public/experience`,
         {
           method: "GET",
           headers: { Accept: "application/json" },
@@ -115,7 +122,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     try {
       const response = await fetch(
-        "http://localhost:4000/api/public/education",
+        `${API_BASE}/public/education`,
         {
           method: "GET",
           headers: { Accept: "application/json" },
@@ -232,7 +239,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     try {
       const response = await fetch(
-        "http://localhost:4000/api/public/certifications",
+        `${API_BASE}/public/certifications`,
         {
           method: "GET",
           headers: { Accept: "application/json" },
@@ -331,7 +338,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     try {
       const response = await fetch(
-        "http://localhost:4000/api/public/projects",
+        `${API_BASE}/public/projects`,
         {
           method: "GET",
           headers: { Accept: "application/json" },
@@ -457,7 +464,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     try {
       const response = await fetch(
-        "http://localhost:4000/api/public/profile",
+        `${API_BASE}/public/profile`,
         {
           method: "GET",
           headers: { Accept: "application/json" },
@@ -497,7 +504,7 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     try {
-      const response = await fetch("http://localhost:4000/api/public/about", {
+      const response = await fetch(`${API_BASE}/public/about`, {
         method: "GET",
         headers: { Accept: "application/json" },
         cache: "no-store"
@@ -535,7 +542,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     try {
       const response = await fetch(
-        "http://localhost:4000/api/public/skills",
+        `${API_BASE}/public/skills`,
         {
           method: "GET",
           headers: { Accept: "application/json" },

@@ -24,16 +24,22 @@ const configuredOrigins = (process.env.FRONTEND_ORIGIN || "http://localhost:5173
     .split(",")
     .map((origin) => origin.trim())
     .filter(Boolean);
-// Live Server (5500), Vite (5173) and any other local static server must all
-// be able to reach the API during development.
-const localOriginPattern = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
+const isProduction = process.env.NODE_ENV === "production";
 app.use((0, cors_1.default)({
     origin(origin, callback) {
         if (!origin) {
             callback(null, true);
             return;
         }
-        callback(null, configuredOrigins.includes(origin) || localOriginPattern.test(origin));
+        if (configuredOrigins.includes(origin)) {
+            callback(null, true);
+            return;
+        }
+        // During development any origin is accepted, so Live Server, Vite, the
+        // IPv6 loopback, a phone on the same network and port-forwarded preview
+        // URLs all work without configuration. Mutations still require a session
+        // plus CSRF token. Production trusts FRONTEND_ORIGIN only.
+        callback(null, !isProduction);
     },
     credentials: true,
 }));
@@ -55,12 +61,15 @@ app.get("/api/health", (_req, res) => {
 });
 app.use("/api/health/database", health_js_1.default);
 // Return a consistent JSON error for invalid CSRF tokens.
-app.use((error, _req, res, next) => {
+app.use((error, req, res, next) => {
     if (error === csrf_js_1.invalidCsrfTokenError ||
         (typeof error === "object" &&
             error !== null &&
             "code" in error &&
             error.code === csrf_js_1.invalidCsrfTokenError.code)) {
+        // A rejected token almost always means the session cookie never arrived,
+        // so log the origin and whether a cookie was sent to make that obvious.
+        console.warn(`CSRF rejected: ${req.method} ${req.originalUrl} origin=${req.headers.origin ?? "none"} cookie=${req.headers.cookie ? "present" : "missing"}`);
         res.status(403).json({
             error: "Invalid or missing CSRF token.",
             code: "EBADCSRFTOKEN",

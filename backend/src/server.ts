@@ -26,9 +26,7 @@ const configuredOrigins = (process.env.FRONTEND_ORIGIN || "http://localhost:5173
   .map((origin) => origin.trim())
   .filter(Boolean);
 
-// Live Server (5500), Vite (5173) and any other local static server must all
-// be able to reach the API during development.
-const localOriginPattern = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
+const isProduction = process.env.NODE_ENV === "production";
 
 app.use(
   cors({
@@ -38,10 +36,16 @@ app.use(
         return;
       }
 
-      callback(
-        null,
-        configuredOrigins.includes(origin) || localOriginPattern.test(origin),
-      );
+      if (configuredOrigins.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+
+      // During development any origin is accepted, so Live Server, Vite, the
+      // IPv6 loopback, a phone on the same network and port-forwarded preview
+      // URLs all work without configuration. Mutations still require a session
+      // plus CSRF token. Production trusts FRONTEND_ORIGIN only.
+      callback(null, !isProduction);
     },
     credentials: true,
   }),
@@ -74,7 +78,7 @@ app.use("/api/health/database", healthRouter);
 app.use(
   (
     error: unknown,
-    _req: express.Request,
+    req: express.Request,
     res: express.Response,
     next: express.NextFunction,
   ) => {
@@ -85,6 +89,14 @@ app.use(
         "code" in error &&
         error.code === invalidCsrfTokenError.code)
     ) {
+      // A rejected token almost always means the session cookie never arrived,
+      // so log the origin and whether a cookie was sent to make that obvious.
+      console.warn(
+        `CSRF rejected: ${req.method} ${req.originalUrl} origin=${
+          req.headers.origin ?? "none"
+        } cookie=${req.headers.cookie ? "present" : "missing"}`,
+      );
+
       res.status(403).json({
         error: "Invalid or missing CSRF token.",
         code: "EBADCSRFTOKEN",

@@ -210,10 +210,14 @@ python3 -m http.server 5500
 
 Log in with the account created in the previous step.
 
-> CORS: the API accepts the origins listed in `FRONTEND_ORIGIN` plus any
-> `http(s)://localhost:*` or `127.0.0.1:*` origin, so Live Server (5500), Vite (5173) and
-> other local static servers all work during development. Add your production domain to
-> `FRONTEND_ORIGIN` before deploying.
+> **The frontend must be served over HTTP.** Double-clicking `frontend/admin/login.html`
+> cannot work: a `file://` page has a `null` origin, so the API blocks its requests and the
+> session cookie cannot persist. The dashboard detects this and shows the command to run.
+
+> CORS: in development the API accepts any origin, so Live Server, Vite, the IPv6 loopback, a
+> phone on the same network and port-forwarded preview URLs all work without configuration
+> (mutations still need a session and a CSRF token). With `NODE_ENV=production` only
+> `FRONTEND_ORIGIN` is trusted — add your deployed domain there before going live.
 
 ### 3. Production build
 
@@ -251,7 +255,7 @@ Example `backend/.env`:
 DATABASE_URL="postgresql://postgres:postgres@localhost:5432/portfolio?schema=public"
 SESSION_SECRET="replace-with-a-random-string-of-at-least-32-characters"
 PORT=4000
-FRONTEND_ORIGIN="http://localhost:5500"
+FRONTEND_ORIGIN="http://localhost:5173"
 ```
 
 ---
@@ -402,9 +406,10 @@ those sections; the screenshots in this README show the implemented result.
 
 ## Known limitations
 
-- **API base URLs are hardcoded** to `http://localhost:4000/api` in
-  `frontend/assets/js/admin.js` (constant `API_BASE`) and as full URLs throughout
-  `frontend/assets/js/script.js`. Change them, or introduce a shared config, before deploying.
+- **The API base URL follows the page hostname** (`http(s)://<page-host>:4000/api`) in both
+  `frontend/assets/js/admin.js` and `frontend/assets/js/script.js`, so `localhost` and `127.0.0.1`
+  both work and the session cookie stays first-party. When the frontend is deployed on a different
+  host, set `window.PORTFOLIO_API_BASE` before the scripts load.
 - **`npm start` points at `dist/server.js`**, while the compiler emits `dist/src/server.js`.
   Run `node dist/src/server.js` until the script is corrected.
 - **Contact messages and audit log** appear in the dashboard navigation but are placeholders;
