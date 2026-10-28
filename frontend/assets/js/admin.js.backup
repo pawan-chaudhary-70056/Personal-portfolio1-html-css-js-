@@ -1,0 +1,210 @@
+"use strict";
+
+(() => {
+  const API_BASE = "http://localhost:4000/api";
+  let csrfToken = "";
+
+  const $ = (selector) => document.querySelector(selector);
+
+  async function api(path, options = {}) {
+    const headers = new Headers(options.headers || {});
+    const method = (options.method || "GET").toUpperCase();
+
+    if (options.body && !headers.has("Content-Type")) {
+      headers.set("Content-Type", "application/json");
+    }
+
+    if (!["GET", "HEAD", "OPTIONS"].includes(method) && csrfToken) {
+      headers.set("X-CSRF-Token", csrfToken);
+    }
+
+    const response = await fetch(`${API_BASE}${path}`, {
+      ...options,
+      method,
+      headers,
+      credentials: "include",
+      cache: "no-store",
+    });
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      const error = new Error(data.error || `Request failed (${response.status}).`);
+      error.status = response.status;
+      throw error;
+    }
+
+    return data;
+  }
+
+  async function refreshCsrfToken() {
+    const data = await api("/auth/csrf-token");
+    if (!data.csrfToken) throw new Error("Unable to initialize secure session.");
+    csrfToken = data.csrfToken;
+  }
+
+  function showMessage(element, message, type = "error") {
+    if (!element) return;
+    element.textContent = message;
+    element.className = `notice ${type}`;
+    element.hidden = false;
+  }
+
+  function setBusy(button, busy, label) {
+    if (!button) return;
+    button.disabled = busy;
+    button.setAttribute("aria-busy", String(busy));
+    if (label) button.firstElementChild.textContent = label;
+  }
+
+  function showLogin() {
+    if (!location.pathname.endsWith("/admin/login.html")) {
+      location.replace("./login.html");
+    }
+  }
+
+  async function initializeLogin() {
+    const form = $("#login-form");
+    if (!form) return;
+
+    $("#admin-year").textContent = String(new Date().getFullYear());
+
+    try {
+      await refreshCsrfToken();
+
+      // If a valid session already exists, go directly to the dashboard.
+      const session = await api("/auth/me");
+      if (session.admin) {
+        location.replace("./index.html");
+        return;
+      }
+    } catch (error) {
+      if (error.status !== 401) {
+        showMessage($("#login-message"),
+          "Could not connect to the API. Check that the backend is running on port 4000.");
+      }
+    }
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const message = $("#login-message");
+      message.hidden = true;
+
+      const button = $("#login-button");
+      setBusy(button, true, "Signing in…");
+
+      try {
+        // Ensure a current anonymous-session CSRF token before login.
+        await refreshCsrfToken();
+
+        await api("/auth/login", {
+          method: "POST",
+          body: JSON.stringify({
+            email: $("#email").value.trim(),
+            password: $("#password").value,
+          }),
+        });
+
+        // Login regenerates the session ID, so fetch a token for the new session.
+        await refreshCsrfToken();
+
+        const session = await api("/auth/me");
+        if (!session.admin) throw new Error("Session verification failed.");
+
+        location.replace("./index.html");
+      } catch (error) {
+        showMessage(message, error.message || "Unable to sign in.");
+      } finally {
+        setBusy(button, false, "Sign in securely");
+      }
+    });
+  }
+
+  async function initializeDashboard() {
+    if (!$("#view-overview")) return;
+
+    $("#admin-year").textContent = String(new Date().getFullYear());
+
+    try {
+      await refreshCsrfToken();
+
+      const result = await api("/admin/check");
+      const admin = result.admin;
+
+      $("#admin-name").textContent = admin.displayName || admin.email;
+      $("#overview-role").textContent = admin.role || "Admin";
+    } catch (error) {
+      if (error.status === 401) {
+        location.replace("./login.html");
+        return;
+      }
+
+      showMessage($("#dashboard-message"),
+        error.message || "Could not verify your administrator session.");
+      return;
+    }
+
+    const sidebar = $("#admin-sidebar");
+    const sidebarToggle = $("#sidebar-toggle");
+    const title = $("#page-title");
+
+    function selectView(view) {
+      const overview = view === "overview";
+      $("#view-overview").hidden = !overview;
+      $("#view-placeholder").hidden = overview;
+
+      if (!overview) {
+        const link = document.querySelector(`.admin-nav-link[data-view="${view}"]`);
+        const heading = link?.textContent.trim() || "Content management";
+        title.textContent = heading;
+        $("#placeholder-title").textContent = heading;
+        $("#placeholder-description").textContent =
+          `${heading} will be connected to validated, authenticated API endpoints in the next implementation phase.`;
+      } else {
+        title.textContent = "Overview";
+      }
+
+      document.querySelectorAll(".admin-nav-link[data-view]").forEach((link) => {
+        link.classList.toggle("active", link.dataset.view === view);
+      });
+
+      sidebar?.classList.remove("is-open");
+      sidebarToggle?.setAttribute("aria-expanded", "false");
+    }
+
+    document.querySelectorAll("[data-view]").forEach((element) => {
+      element.addEventListener("click", (event) => {
+        event.preventDefault();
+        selectView(element.dataset.view || "overview");
+      });
+    });
+
+    sidebarToggle?.addEventListener("click", () => {
+      const open = sidebar.classList.toggle("is-open");
+      sidebarToggle.setAttribute("aria-expanded", String(open));
+    });
+
+    $("#logout-button")?.addEventListener("click", async () => {
+      const button = $("#logout-button");
+      button.disabled = true;
+
+      try {
+        await api("/auth/logout", { method: "POST" });
+      } catch (error) {
+        showMessage($("#dashboard-message"),
+          `Logout request failed: ${error.message}. Please retry.`);
+        button.disabled = false;
+        return;
+      }
+
+      csrfToken = "";
+      location.replace("./login.html");
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    if ($("#login-form")) initializeLogin();
+    if ($("#view-overview")) initializeDashboard();
+  });
+})();

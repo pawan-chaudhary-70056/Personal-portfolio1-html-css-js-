@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111110">
+  <title>Admin Login | Pawan Chaudhary</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+  <script src="../assets/js/admin.js" defer></script>
+</head>
+<body class="admin-auth-page">
+  <main class="auth-shell">
+    <a class="admin-brand" href="../index.html" aria-label="Return to portfolio">
+      <span class="brand-mark">PC</span>
+      <span>Pawan Chaudhary <small>PORTFOLIO ADMIN</small></span>
+    </a>
+
+    <section class="auth-card" aria-labelledby="login-title">
+      <p class="eyebrow">SECURE ADMINISTRATION</p>
+      <h1 id="login-title">Welcome back.</h1>
+      <p class="muted">Sign in to manage your portfolio content.</p>
+
+      <div id="login-message" class="notice" role="alert" hidden></div>
+
+      <form id="login-form">
+        <label for="email">Email address</label>
+        <input id="email" name="email" type="email"
+          autocomplete="username" maxlength="254" required>
+
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password"
+          autocomplete="current-password" maxlength="128" required>
+
+        <button class="button button-primary" id="login-button" type="submit">
+          <span>Sign in securely</span><span aria-hidden="true">↗</span>
+        </button>
+      </form>
+
+      <p class="auth-footnote">
+        Protected administrator access. If two-factor authentication is enabled,
+        use a login flow that supports its verification.
+      </p>
+      <a class="back-link" href="../index.html">← Back to portfolio</a>
+    </section>
+
+    <p class="auth-copyright">© <span id="admin-year"></span> Pawan Chaudhary</p>
+  </main>
+</body>
+</html>

@@ -1,0 +1,372 @@
+
+/* =========================================================
+   PORTFOLIO MOTION SYSTEM
+   Additive stylesheet — does not replace the existing theme.
+   ========================================================= */
+
+:root {
+  --motion-fast: 180ms;
+  --motion-medium: 420ms;
+  --motion-slow: 760ms;
+  --motion-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Smooth theme changes */
+html,
+body,
+.site-header,
+.primary-navigation,
+.theme-toggle,
+.brand-mark,
+.button,
+.skill-card,
+.project-card,
+.experience-card,
+.education-card,
+.certification-card,
+.contact-panel {
+  transition:
+    background-color 300ms ease,
+    color 300ms ease,
+    border-color 300ms ease,
+    box-shadow 300ms ease;
+}
+
+/* Hero entrance */
+@keyframes motion-enter-up {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 32px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes motion-enter-left {
+  from {
+    opacity: 0;
+    transform: translate3d(-30px, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes motion-enter-right {
+  from {
+    opacity: 0;
+    transform: translate3d(30px, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes motion-soft-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 rgba(198, 170, 120, 0);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(198, 170, 120, 0.12);
+  }
+}
+
+@keyframes motion-float {
+  0%, 100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 -9px;
+  }
+}
+
+@keyframes motion-orb-drift {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(-14px, 12px, 0) scale(1.06);
+  }
+}
+
+.hero-content > .eyebrow,
+.hero-content > h1,
+.hero-content > .hero-description,
+.hero-content > .hero-actions,
+.hero-content > .hero-meta {
+  animation: motion-enter-up 850ms var(--motion-ease) both;
+}
+
+.hero-content > .eyebrow { animation-delay: 80ms; }
+.hero-content > h1 { animation-delay: 170ms; }
+.hero-content > .hero-description { animation-delay: 270ms; }
+.hero-content > .hero-actions { animation-delay: 360ms; }
+.hero-content > .hero-meta { animation-delay: 450ms; }
+
+.hero-visual {
+  animation: motion-enter-right 950ms var(--motion-ease) 180ms both;
+}
+
+.floating-note {
+  animation: motion-float 4.5s ease-in-out infinite;
+}
+
+.note-bottom {
+  animation-delay: -2.1s;
+}
+
+.hero-orb {
+  animation: motion-orb-drift 9s ease-in-out infinite;
+}
+
+.orb-two {
+  animation-delay: -4.5s;
+}
+
+/* 3D image frame. JS supplies the pointer-driven rotation. */
+.hero-image-frame,
+.about-image-frame {
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  transition:
+    transform 220ms var(--motion-ease),
+    border-color 300ms ease,
+    box-shadow 300ms ease;
+  will-change: transform;
+}
+
+.hero-image-frame {
+  box-shadow: 0 18px 55px rgba(0, 0, 0, 0.12);
+}
+
+.hero-image-frame:hover,
+.about-image-frame:hover {
+  border-color: var(--accent);
+  box-shadow: 0 22px 65px rgba(0, 0, 0, 0.2);
+}
+
+.hero-image,
+.about-image {
+  transition: transform 650ms var(--motion-ease);
+}
+
+.about-image-frame:hover .about-image {
+  transform: scale(1.045);
+}
+
+/* Scroll reveal — JS adds .js-reveal before observation */
+.js-reveal {
+  opacity: 0;
+  transform: translate3d(0, 34px, 0) scale(0.985);
+  transition:
+    opacity 750ms var(--motion-ease),
+    transform 750ms var(--motion-ease);
+  transition-delay: var(--reveal-delay, 0ms);
+  will-change: opacity, transform;
+}
+
+.js-reveal.is-visible {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+}
+
+/* Staggered card groups */
+.skills-grid .skill-card,
+.projects-grid .project-card,
+.experience-list .experience-card,
+.certifications-grid .certification-card {
+  transition:
+    transform 380ms var(--motion-ease),
+    border-color 280ms ease,
+    box-shadow 380ms var(--motion-ease),
+    background-color 300ms ease;
+}
+
+.skills-grid .skill-card:hover,
+.projects-grid .project-card:hover,
+.experience-list .experience-card:hover,
+.certifications-grid .certification-card:hover {
+  transform: translateY(-8px);
+  border-color: var(--accent);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.12);
+}
+
+/* Interactive project art */
+.project-art {
+  perspective: 900px;
+}
+
+.project-art > * {
+  transition: transform 500ms var(--motion-ease);
+}
+
+.project-card:hover .art-window {
+  transform: rotateX(3deg) rotateY(-4deg) translateY(-3px);
+}
+
+.project-card:hover .security-shape {
+  transform: rotateY(12deg) scale(1.05);
+}
+
+.project-card:hover .security-ring {
+  transform: scale(1.08);
+  transition: transform 600ms var(--motion-ease);
+}
+
+.project-card:hover .medical-cross {
+  transform: translateX(-50%) scale(1.08);
+}
+
+/* Buttons and links */
+.button {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  transition:
+    transform 250ms var(--motion-ease),
+    background-color 250ms ease,
+    border-color 250ms ease,
+    box-shadow 250ms ease;
+}
+
+.button::after {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background: linear-gradient(
+    110deg,
+    transparent 20%,
+    rgba(255, 255, 255, 0.18) 48%,
+    transparent 75%
+  );
+  content: "";
+  transform: translateX(-130%);
+  transition: transform 650ms var(--motion-ease);
+}
+
+.button:hover::after {
+  transform: translateX(130%);
+}
+
+.button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.12);
+}
+
+.button:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.text-link span {
+  display: inline-block;
+  transition: transform 250ms var(--motion-ease);
+}
+
+.text-link:hover span {
+  transform: translate(5px, -3px);
+}
+
+/* Navigation and controls */
+.nav-link::after {
+  transform-origin: center;
+  transition: transform 300ms var(--motion-ease);
+}
+
+.theme-toggle,
+.menu-toggle {
+  transition:
+    transform 260ms var(--motion-ease),
+    border-color 260ms ease,
+    background-color 260ms ease;
+}
+
+.theme-toggle:hover,
+.menu-toggle:hover {
+  transform: rotate(6deg) scale(1.06);
+  border-color: var(--accent);
+}
+
+.brand-mark {
+  transition: transform 350ms var(--motion-ease);
+}
+
+.brand:hover .brand-mark {
+  transform: rotate(-7deg) scale(1.05);
+}
+
+/* Mobile menu entrance; existing display and open logic remain intact */
+@media (max-width: 860px) {
+  .primary-navigation.is-open {
+    animation: motion-enter-up 350ms var(--motion-ease) both;
+    transform-origin: top center;
+  }
+
+  .primary-navigation.is-open .nav-link {
+    animation: motion-enter-up 380ms var(--motion-ease) both;
+  }
+
+  .primary-navigation.is-open .nav-link:nth-child(1) { animation-delay: 30ms; }
+  .primary-navigation.is-open .nav-link:nth-child(2) { animation-delay: 60ms; }
+  .primary-navigation.is-open .nav-link:nth-child(3) { animation-delay: 90ms; }
+  .primary-navigation.is-open .nav-link:nth-child(4) { animation-delay: 120ms; }
+  .primary-navigation.is-open .nav-link:nth-child(5) { animation-delay: 150ms; }
+  .primary-navigation.is-open .nav-link:nth-child(6) { animation-delay: 180ms; }
+  .primary-navigation.is-open .nav-link:nth-child(7) { animation-delay: 210ms; }
+}
+
+/* Keyboard users retain a clear focus indicator */
+:focus-visible {
+  outline-color: var(--accent);
+}
+
+/* Touch devices: avoid sticky hover/tilt behavior */
+@media (hover: none), (pointer: coarse) {
+  .hero-image-frame,
+  .about-image-frame {
+    transform: none !important;
+    will-change: auto;
+  }
+
+  .button:hover,
+  .skill-card:hover,
+  .project-card:hover,
+  .experience-card:hover,
+  .certification-card:hover {
+    transform: none;
+  }
+
+  .floating-note {
+    animation-duration: 6s;
+  }
+}
+
+/* Respect the operating system's reduced-motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+  }
+
+  .js-reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    will-change: auto;
+  }
+
+  .hero-image-frame,
+  .about-image-frame,
+  .floating-note,
+  .hero-orb {
+    animation: none !important;
+    transform: none !important;
+  }
+}

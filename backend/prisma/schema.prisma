@@ -1,0 +1,238 @@
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum AdminRole {
+  OWNER
+  ADMIN
+  EDITOR
+}
+
+enum AuditSeverity {
+  INFO
+  WARNING
+  CRITICAL
+}
+
+model AdminUser {
+  id                String    @id @default(uuid()) @db.Uuid
+  email             String    @unique @db.VarChar(254)
+  passwordHash      String
+  displayName       String    @db.VarChar(120)
+  role              AdminRole @default(OWNER)
+  isActive          Boolean   @default(true)
+  twoFactorEnabled  Boolean   @default(false)
+  twoFactorSecret   String?
+  twoFactorVerifiedAt DateTime?
+  lastLoginAt       DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  sessions          AdminSession[]
+  auditEvents       AuditLog[]
+}
+
+model AdminSession {
+  id         String   @id @default(uuid()) @db.Uuid
+  adminId    String   @db.Uuid
+  sessionKey String   @unique
+  ipAddress  String?
+  userAgent  String?
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+
+  admin      AdminUser @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@index([adminId])
+  @@index([expiresAt])
+}
+
+model PortfolioProfile {
+  id                String   @id @default(uuid()) @db.Uuid
+  fullName          String   @db.VarChar(160)
+  headline          String?  @db.VarChar(240)
+  professionalSummary String? @db.Text
+  email             String?  @db.VarChar(254)
+  phone             String?  @db.VarChar(40)
+  location          String?  @db.VarChar(160)
+  profileImage      String?
+  profileImageAlt   String?
+  githubUrl         String?
+  linkedinUrl       String?
+  websiteUrl        String?
+  seoTitle          String?
+  seoDescription    String?
+  updatedAt         DateTime @updatedAt
+}
+
+model Project {
+  id            String        @id @default(uuid()) @db.Uuid
+  title         String        @db.VarChar(180)
+  slug          String        @unique @db.VarChar(200)
+  summary       String        @db.Text
+  description   String?       @db.Text
+  category      String        @db.VarChar(100)
+  technologies  String[]      @default([])
+  repositoryUrl String?
+  liveUrl       String?
+  imageUrl      String?
+  imageAlt      String?
+  featured      Boolean       @default(false)
+  sortOrder     Int           @default(0)
+  status        ContentStatus @default(DRAFT)
+  publishedAt   DateTime?
+  archivedAt    DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([status, sortOrder])
+  @@index([featured])
+}
+
+model WorkExperience {
+  id          String        @id @default(uuid()) @db.Uuid
+  company     String        @db.VarChar(180)
+  position    String        @db.VarChar(180)
+  location    String?       @db.VarChar(180)
+  description String?       @db.Text
+  startDate   DateTime
+  endDate     DateTime?
+  isCurrent   Boolean       @default(false)
+  sortOrder   Int           @default(0)
+  status      ContentStatus @default(DRAFT)
+  publishedAt DateTime?
+  archivedAt  DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([status, sortOrder])
+}
+
+model Education {
+  id             String        @id @default(uuid()) @db.Uuid
+  institution    String        @db.VarChar(200)
+  qualification  String        @db.VarChar(200)
+  fieldOfStudy   String?       @db.VarChar(200)
+  level          String?       @db.VarChar(100)
+  degreeAward    String?       @db.VarChar(200)
+  result         String?       @db.VarChar(100)
+  startDate      DateTime?
+  endDate        DateTime?
+  description    String?       @db.Text
+  sortOrder      Int           @default(0)
+  status         ContentStatus @default(DRAFT)
+  publishedAt    DateTime?
+  archivedAt     DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([status, sortOrder])
+}
+
+model Certification {
+  id            String        @id @default(uuid()) @db.Uuid
+  name          String        @db.VarChar(200)
+  issuer        String        @db.VarChar(180)
+  credentialId  String?       @db.VarChar(180)
+  credentialUrl String?
+  issuedAt      DateTime?
+  expiresAt     DateTime?
+  description   String?       @db.Text
+  sortOrder     Int           @default(0)
+  status        ContentStatus @default(DRAFT)
+  publishedAt   DateTime?
+  archivedAt    DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@index([status, sortOrder])
+}
+
+model SkillCategory {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String   @unique @db.VarChar(100)
+  description String?  @db.VarChar(300)
+  sortOrder   Int      @default(0)
+  skills    Skill[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Skill {
+  id          String       @id @default(uuid()) @db.Uuid
+  categoryId  String       @db.Uuid
+  name        String       @db.VarChar(120)
+  proficiency Int?
+  sortOrder   Int          @default(0)
+  isVisible   Boolean      @default(true)
+  category    SkillCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@unique([categoryId, name])
+  @@index([categoryId, sortOrder])
+}
+
+model MediaAsset {
+  id           String   @id @default(uuid()) @db.Uuid
+  originalName String   @db.VarChar(255)
+  storageKey   String   @unique
+  mimeType     String   @db.VarChar(100)
+  sizeBytes    BigInt
+  altText      String?
+  width        Int?
+  height       Int?
+  createdAt    DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+model ContactMessage {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String   @db.VarChar(160)
+  email       String   @db.VarChar(254)
+  subject     String?  @db.VarChar(200)
+  message     String   @db.Text
+  isRead      Boolean  @default(false)
+  archivedAt  DateTime?
+  createdAt   DateTime @default(now())
+
+  @@index([isRead, createdAt])
+}
+
+model AuditLog {
+  id          String        @id @default(uuid()) @db.Uuid
+  adminId     String?       @db.Uuid
+  action      String        @db.VarChar(120)
+  entityType  String?       @db.VarChar(100)
+  entityId    String?
+  severity    AuditSeverity @default(INFO)
+  ipAddress   String?
+  metadata    Json?
+  createdAt   DateTime      @default(now())
+
+  admin       AdminUser? @relation(fields: [adminId], references: [id], onDelete: SetNull)
+
+  @@index([adminId, createdAt])
+  @@index([entityType, entityId])
+  @@index([severity, createdAt])
+}
+
+model SiteSetting {
+  id        String   @id @default(uuid()) @db.Uuid
+  key       String   @unique @db.VarChar(120)
+  value     Json
+  updatedAt DateTime @updatedAt
+}

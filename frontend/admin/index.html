@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111110">
+  <title>Dashboard | Portfolio Admin</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+  <script src="../assets/js/admin.js" defer></script>
+</head>
+<body class="dashboard-page">
+  <div class="dashboard-layout">
+    <aside class="sidebar" id="admin-sidebar">
+      <a class="admin-brand" href="../index.html">
+        <span class="brand-mark">PC</span>
+        <span>Pawan Chaudhary<small>PORTFOLIO ADMIN</small></span>
+      </a>
+
+      <p class="sidebar-label">WORKSPACE</p>
+      <nav class="admin-navigation" aria-label="Admin navigation">
+        <a class="admin-nav-link active" href="#overview" data-view="overview">Overview</a>
+        <a class="admin-nav-link" href="#profile" data-view="profile">Profile</a>
+        <a class="admin-nav-link" href="#projects" data-view="projects">Projects</a>
+        <a class="admin-nav-link" href="#experience" data-view="experience">Experience</a>
+        <a class="admin-nav-link" href="#education" data-view="education">Education</a>
+        <a class="admin-nav-link" href="#certifications" data-view="certifications">Certifications</a>
+        <a class="admin-nav-link" href="#skills" data-view="skills">Skills</a>
+        <a class="admin-nav-link" href="#messages" data-view="messages">Contact messages</a>
+        <a class="admin-nav-link" href="#settings" data-view="settings">Site settings</a>
+        <a class="admin-nav-link" href="#audit" data-view="audit">Audit log</a>
+      </nav>
+
+      <div class="sidebar-bottom">
+        <a class="admin-nav-link" href="../index.html">↗ View portfolio</a>
+        <button class="admin-nav-link logout-link" id="logout-button" type="button">
+          Sign out
+        </button>
+      </div>
+    </aside>
+
+    <main class="dashboard-main">
+      <header class="dashboard-header">
+        <button id="sidebar-toggle" class="icon-button" type="button"
+          aria-label="Toggle navigation" aria-expanded="false">☰</button>
+        <div>
+          <p class="eyebrow">PORTFOLIO MANAGEMENT</p>
+          <h1 id="page-title">Overview</h1>
+        </div>
+        <div class="admin-identity">
+          <span class="identity-dot" aria-hidden="true"></span>
+          <span id="admin-name">Verifying session…</span>
+        </div>
+      </header>
+
+      <div id="dashboard-message" class="notice" role="status" hidden></div>
+
+      <section class="dashboard-view" id="view-overview">
+        <div class="welcome-panel">
+          <div>
+            <p class="eyebrow">YOUR WORKSPACE</p>
+            <h2>Manage your professional presence.</h2>
+            <p class="muted">Keep your portfolio accurate, current and ready to share.</p>
+          </div>
+          <a class="button button-secondary" href="../index.html" target="_blank"
+            rel="noopener noreferrer">Open public portfolio ↗</a>
+        </div>
+
+        <div class="stat-grid">
+          <article class="stat-card">
+            <span class="stat-label">Content collections</span>
+            <strong>6</strong>
+            <span class="muted">Available for management</span>
+          </article>
+          <article class="stat-card">
+            <span class="stat-label">Administrator</span>
+            <strong id="overview-role">—</strong>
+            <span class="muted">Current access role</span>
+          </article>
+          <article class="stat-card">
+            <span class="stat-label">Session status</span>
+            <strong class="status-online">Verified</strong>
+            <span class="muted">Server-side session check</span>
+          </article>
+        </div>
+
+        <section class="panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">QUICK ACCESS</p>
+              <h2>Content management</h2>
+            </div>
+          </div>
+          <div class="quick-grid">
+            <button class="quick-card" type="button" data-view="profile">
+              <strong>Profile</strong><span>Personal details and professional summary ↗</span>
+            </button>
+            <button class="quick-card" type="button" data-view="projects">
+              <strong>Projects</strong><span>Portfolio projects and links ↗</span>
+            </button>
+            <button class="quick-card" type="button" data-view="experience">
+              <strong>Experience</strong><span>Employment and internship history ↗</span>
+            </button>
+            <button class="quick-card" type="button" data-view="certifications">
+              <strong>Certifications</strong><span>Credentials and verification links ↗</span>
+            </button>
+          </div>
+        </section>
+      </section>
+
+      <section class="dashboard-view" id="view-placeholder" hidden>
+        <div class="panel empty-state">
+          <p class="eyebrow">CONTENT MANAGEMENT</p>
+          <h2 id="placeholder-title">Coming next</h2>
+          <p id="placeholder-description" class="muted">
+            This section will connect to the protected portfolio API.
+          </p>
+          <p class="muted">
+            Content editing will be enabled after its API and validation are implemented.
+          </p>
+        </div>
+      </section>
+
+      <footer class="dashboard-footer">
+        <span>Portfolio administration</span>
+        <span>© <span id="admin-year"></span> Pawan Chaudhary</span>
+      </footer>
+    </main>
+  </div>
+</body>
+</html>
